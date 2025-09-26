@@ -1,3 +1,8 @@
+
+@import url('https://fonts.googleapis.com/css2?family=UoqMunThenKhung&display=swap');
+
+	
+p{font-family: "UoqMunThenKhung", serif;}
 h1{
 	color: #6fbb9a;
 	text-align: center ;
@@ -10,7 +15,7 @@ h2{
 	padding: 5px 20px;
 	margin-bottom: 0;
 }
-
+ 
 body{
 	background-position: center;
 	background-color: #fbf9cc;
@@ -29,3 +34,11 @@ body{
 	background-color: #fff;
 }
 
+.photo{
+   float: left;
+   margin-right: 30px;
+}
+.section{
+    float: left;
+    width: 100px;
+}
