@@ -37,8 +37,11 @@ body{
 .photo{
    float: left;
    margin-right: 30px;
+   
+   
 }
 .section{
     float: left;
     width: 100px;
+	
 }
