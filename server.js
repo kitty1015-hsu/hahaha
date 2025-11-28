@@ -2,11 +2,12 @@
 const express = require('express');
 const mysql = require('mysql2');
 const path = require('path'); // (新) 載入 path 模組
-const dbConfig = require('./db-config');
+const dbConfig = require('./public/db-config');
 // --- 2. 建立 Express 應用程式和連線 ---
 const app = express();
 const port = 3000;
 const connection = mysql.createConnection(dbConfig);
+// const connection = mysql.createPool(dbConfig); // 建議改用 createPool 比較穩定
 
 // --- 3. 設定 Express 中介軟體 (Middleware) ---
 // (A) 為了能解析 <form> POST 過來的資料
@@ -32,6 +33,7 @@ app.get('/api/messages', (req, res) => {
     res.status(200).json(results);
   });
 });
+
 // 路由 B：POST /add-message (接收表單資料)
 app.post('/add-message', (req, res) => {
   const username = req.body.username_field;
