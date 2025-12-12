@@ -8,7 +8,15 @@ const app = express();
 const port = 3000;
 const connection = mysql.createConnection(dbConfig);
 // const connection = mysql.createPool(dbConfig); // 建議改用 createPool 比較穩定
+// ---------------------------------------------------------
+// ⚠️ 第六章關鍵設定：POST 請求翻譯機 (Middleware)
+// 這行一定要放在所有路由 (app.get/post) 的「上面」！
+// 如果沒加這行，POST 表單送來的資料 (req.body) 會是 undefined (看不懂)
+// ---------------------------------------------------------
+app.use(express.urlencoded({ extended: true }));
 
+// 設定樣板引擎為 EJS
+app.set('view engine', 'ejs');
 // --- 3. 設定 Express 中介軟體 (Middleware) ---
 // (A) 為了能解析 <form> POST 過來的資料
 app.use(express.urlencoded({ extended: true }));
@@ -55,4 +63,55 @@ app.post('/add-message', (req, res) => {
 // --- 5. 啟動伺服器 ---
 app.listen(port, () => {
   console.log(`伺服器已啟動，請在瀏覽器開啟 http://localhost:${port}`);
+});
+// --- 路由 3. 個人頁面展示  ---
+app.get('/profile/:username', (req, res) => {  
+    // 1. 抓取網址上的參數
+    const username = req.params.username;
+
+    // 2. 第一步：去 users 資料庫找這個人
+    connection.query('SELECT * FROM users WHERE username = ?', [username], (err, users) => {        
+        // 2-1. 檢查資料庫連線錯誤
+        if (err) {
+            console.error('查詢使用者失敗:', err);
+            return res.status(500).send('伺服器發生錯誤');
+        }
+
+        // 2-2. 檢查有沒有找到人
+        if (users.length === 0) {
+            return res.status(404).send('<h1>404 - 查無此人</h1>');
+        }
+
+        // 3. 找到了！取出使用者資料
+        const user = users[0];
+
+        // 4. 第二步：拿這個人的 user_id 去 posts 資料庫找貼文
+        const sqlPosts = 'SELECT content FROM posts WHERE user_id = ?';
+       
+        connection.query(sqlPosts, [user.user_id], (err, posts) => {            
+            // 4-1. 檢查貼文查詢錯誤
+            if (err) {
+                console.error('查詢貼文失敗:', err);
+                return res.status(500).send('讀取貼文失敗');
+            }
+
+            // 5. 資料整形 (Mapping)
+            const userData = {
+                name: user.display_name,    
+                bio: user.bio,
+                avatar: user.avatar_url,    
+                friends: user.friends_count,
+                // 把資料庫撈出來的物件陣列，轉成 EJS 看得懂的純文字陣列
+                posts: posts.map(row => row.content)
+            };
+
+            // 6. 渲染畫面
+            // 重點：除了 data 之外，我們多傳了 id (user.username)
+            // 這樣 edit.ejs 裡的「修改按鈕」才知道要連去哪裡
+            res.render('profile', {
+                data: userData,
+                id: user.username
+            });
+        });
+    });
 });
